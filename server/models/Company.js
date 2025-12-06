@@ -23,6 +23,13 @@ const companySchema = new mongoose.Schema({
   quantityIssued: Number,
   parValue: Number,
   
+  // Custom category for grouping/comparing companies
+  category: {
+    type: String,
+    default: '',
+    index: true
+  },
+  
   // Price data
   lastTradedPrice: Number,
   closingPrice: Number,
@@ -75,4 +82,3 @@ const companySchema = new mongoose.Schema({
 companySchema.index({ symbol: 'text', name: 'text' });
 
 module.exports = mongoose.model('Company', companySchema);
-

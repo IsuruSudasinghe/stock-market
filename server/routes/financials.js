@@ -146,8 +146,9 @@ router.post('/:symbol', async (req, res, next) => {
     
     let doc;
     if (existing) {
-      // Update existing
-      existing.data = { ...existing.data.toObject(), ...data };
+      // Update existing - safely handle both Mongoose subdocument and plain object
+      const existingData = existing.data.toObject ? existing.data.toObject() : existing.data;
+      existing.data = { ...existingData, ...data };
       existing.periodLabel = periodLabel || existing.periodLabel;
       existing.updatedAt = new Date();
       doc = await existing.save();

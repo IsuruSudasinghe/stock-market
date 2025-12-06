@@ -1,10 +1,10 @@
 /**
- * Format a number with abbreviations (K, M, B, T)
+ * Format a number with abbreviations (K, M, B, T) in LKR
  * @param {number} num - The number to format
- * @param {number} decimals - Number of decimal places
+ * @param {number} decimals - Number of decimal places (default 3)
  * @returns {string} Formatted number string
  */
-export const formatNumber = (num, decimals = 2) => {
+export const formatNumber = (num, decimals = 3) => {
   if (num === null || num === undefined) return '—';
   if (num === 0) return '0';
   
@@ -28,46 +28,63 @@ export const formatNumber = (num, decimals = 2) => {
 };
 
 /**
- * Format a number as currency with full precision
+ * Format a number as LKR currency with full precision
  * @param {number} num - The number to format
  * @returns {string} Formatted currency string
  */
 export const formatCurrency = (num) => {
   if (num === null || num === undefined) return '—';
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-LK', {
     style: 'decimal',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 3
+  }).format(num);
+};
+
+/**
+ * Format LKR currency with symbol
+ * @param {number} num - The number to format
+ * @returns {string} Formatted currency string with LKR symbol
+ */
+export const formatLKR = (num) => {
+  if (num === null || num === undefined) return '—';
+  return 'Rs. ' + new Intl.NumberFormat('en-LK', {
+    style: 'decimal',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3
   }).format(num);
 };
 
 /**
  * Format a percentage change with sign and color class
+ * Only shows percentage if data is available to calculate
  * @param {number} change - The change value (decimal, e.g., 0.1403 for 14.03%)
- * @returns {object} { value: string, colorClass: string, arrow: string }
+ * @returns {object} { value: string, colorClass: string, arrow: string, hasValue: boolean }
  */
 export const formatPercentChange = (change) => {
-  if (change === null || change === undefined) {
-    return { value: '—', colorClass: 'text-neutral', arrow: '' };
+  if (change === null || change === undefined || !isFinite(change)) {
+    return { value: '—', colorClass: 'text-neutral', arrow: '', hasValue: false };
   }
   
-  const percentage = (change * 100).toFixed(2);
+  const percentage = (change * 100).toFixed(3);
   
   if (change > 0) {
     return {
       value: `+${percentage}%`,
       colorClass: 'text-positive',
-      arrow: '↑'
+      arrow: '↑',
+      hasValue: true
     };
   } else if (change < 0) {
     return {
       value: `${percentage}%`,
       colorClass: 'text-negative',
-      arrow: '↓'
+      arrow: '↓',
+      hasValue: true
     };
   }
   
-  return { value: '0.00%', colorClass: 'text-neutral', arrow: '' };
+  return { value: '0.000%', colorClass: 'text-neutral', arrow: '', hasValue: true };
 };
 
 /**
@@ -76,8 +93,8 @@ export const formatPercentChange = (change) => {
  * @returns {string} Formatted percentage
  */
 export const formatPercent = (value) => {
-  if (value === null || value === undefined) return '—';
-  return `${value.toFixed(2)}%`;
+  if (value === null || value === undefined || !isFinite(value)) return '—';
+  return `${value.toFixed(3)}%`;
 };
 
 /**
@@ -88,9 +105,11 @@ export const formatPercent = (value) => {
  * @returns {object} Formatted price data
  */
 export const formatPriceChange = (price, change, changePercent) => {
-  const priceStr = price?.toFixed(2) ?? '—';
-  const changeStr = change?.toFixed(2) ?? '—';
-  const percentStr = changePercent?.toFixed(2) ?? '—';
+  const priceStr = price?.toFixed(3) ?? '—';
+  const changeStr = change?.toFixed(3) ?? '—';
+  const percentStr = (changePercent !== null && changePercent !== undefined && isFinite(changePercent)) 
+    ? changePercent.toFixed(3) 
+    : null;
   
   let colorClass = 'text-neutral';
   let arrow = '';
@@ -109,7 +128,7 @@ export const formatPriceChange = (price, change, changePercent) => {
   return {
     price: priceStr,
     change: change >= 0 ? `+${changeStr}` : changeStr,
-    percent: `(${changePercent >= 0 ? '' : ''}${percentStr}%)`,
+    percent: percentStr ? `(${percentStr}%)` : '',
     colorClass,
     arrow,
     bgClass
@@ -167,4 +186,3 @@ export const labelToPeriodISO = (label, type) => {
   
   return label;
 };
-

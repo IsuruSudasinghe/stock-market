@@ -47,26 +47,26 @@ const NumericDetailRows = ({
   const formatValue = (key, value) => {
     if (value === null || value === undefined) return '—';
     if (isPercentageMetric(key)) return formatPercent(value);
-    if (isRatioMetric(key)) return value.toFixed(2);
+    if (isRatioMetric(key)) return value.toFixed(3);
     return formatNumber(value);
   };
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 px-8">
       {/* Header */}
-      <div className="flex items-center justify-between text-xs text-gray-500 uppercase tracking-wide mb-3 pb-2 border-b border-gray-100">
-        <span>(USD)</span>
-        <div className="flex items-center gap-8">
+      <div className="flex items-center justify-between text-xs text-gray-500 uppercase tracking-wide mb-3 pb-2 border-b border-gray-100 px-4">
+        <span>(LKR)</span>
+        <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
             {periodLabel || selectedPeriod || 'Latest'} 
             <span className="text-gray-400">ⓘ</span>
           </span>
-          <span className="w-24 text-right">Y/Y Change</span>
+          <span className="w-28 text-right">Y/Y Change</span>
         </div>
       </div>
 
       {/* Rows */}
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {metrics.map((metricKey) => {
           const value = data?.[metricKey];
           const yoyValue = yoy?.[metricKey];
@@ -75,19 +75,25 @@ const NumericDetailRows = ({
           return (
             <div
               key={metricKey}
-              className="flex items-center justify-between py-2 hover:bg-slate-50 rounded transition-colors"
+              className="flex items-center justify-between py-2 px-4 hover:bg-slate-50 rounded transition-colors"
             >
-              <span className="text-sm text-gray-700">{getDisplayName(metricKey)}</span>
-              <div className="flex items-center gap-8">
+              <span className="text-sm text-gray-700 flex-1">{getDisplayName(metricKey)}</span>
+              <div className="flex items-center gap-4">
                 <span 
-                  className="text-sm font-medium text-slate-800 tabular-nums"
+                  className="text-sm font-medium text-slate-800 tabular-nums min-w-[100px] text-right"
                   title={value?.toLocaleString()}
                 >
                   {formatValue(metricKey, value)}
                 </span>
-                <span className={`w-24 text-right text-sm font-medium tabular-nums ${change.colorClass}`}>
-                  {change.arrow && <span className="mr-1">{change.arrow}</span>}
-                  {change.value}
+                <span className={`w-28 text-right text-sm font-medium tabular-nums ${change.colorClass}`}>
+                  {change.hasValue ? (
+                    <>
+                      {change.arrow && <span className="mr-1">{change.arrow}</span>}
+                      {change.value}
+                    </>
+                  ) : (
+                    '—'
+                  )}
                 </span>
               </div>
             </div>
@@ -99,4 +105,3 @@ const NumericDetailRows = ({
 };
 
 export default NumericDetailRows;
-

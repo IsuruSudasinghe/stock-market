@@ -11,6 +11,7 @@ const financialsRouter = require('./routes/financials');
 const metricsRouter = require('./routes/metrics');
 const syncRouter = require('./routes/sync');
 const compareRouter = require('./routes/compare');
+const categoryMetricsRouter = require('./routes/categoryMetrics');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/financials', financialsRouter);
 app.use('/api/metrics', metricsRouter);
 app.use('/api/sync', syncRouter);
 app.use('/api/compare', compareRouter);
+app.use('/api/category-metrics', categoryMetricsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

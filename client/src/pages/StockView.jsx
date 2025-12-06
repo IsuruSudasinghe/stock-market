@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAppState } from '../contexts/AppStateContext';
 import UpperInfoBand from '../components/UpperInfoBand';
 import CompareControl from '../components/CompareControl';
 import FinancialSection from '../components/FinancialSection';
-import { getCompany, getFinancials, syncCompanyFromCSE, compareStocks } from '../utils/api';
+import { getCompany, getFinancials, syncCompanyFromCSE } from '../utils/api';
 
 const StockView = () => {
   const { symbol } = useParams();
   const navigate = useNavigate();
+  const { dashboardState, updateDashboardState } = useAppState();
   
   // State
   const [company, setCompany] = useState(null);
@@ -24,13 +26,15 @@ const StockView = () => {
     cashflow: false
   });
   
-  // Compare mode state
-  const [isCompareMode, setIsCompareMode] = useState(false);
-  const [compareStockSymbols, setCompareStockSymbols] = useState([]);
-  const [compareData, setCompareData] = useState([]);
-  
-  // Period type state (shared across sections or per-section)
-  const [periodTypes, setPeriodTypes] = useState({
+  // Use preserved state from context
+  const [isCompareMode, setIsCompareMode] = useState(dashboardState.isCompareMode);
+  const [compareStockSymbols, setCompareStockSymbols] = useState(dashboardState.compareStockSymbols || []);
+  const [compareData, setCompareData] = useState({
+    income: [],
+    balance: [],
+    cashflow: []
+  });
+  const [periodTypes, setPeriodTypes] = useState(dashboardState.periodTypes || {
     income: 'quarterly',
     balance: 'quarterly',
     cashflow: 'quarterly'
@@ -39,6 +43,15 @@ const StockView = () => {
   // Default symbol for initial load
   const currentSymbol = symbol || 'JKH.N0000';
 
+  // Save state to context whenever it changes
+  useEffect(() => {
+    updateDashboardState({
+      isCompareMode,
+      compareStockSymbols,
+      periodTypes
+    });
+  }, [isCompareMode, compareStockSymbols, periodTypes, updateDashboardState]);
+
   // Fetch company data
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -46,11 +59,9 @@ const StockView = () => {
 
       setLoading(prev => ({ ...prev, company: true }));
       try {
-        // Try to get from DB first
         let companyData = await getCompany(currentSymbol);
         setCompany(companyData);
       } catch (error) {
-        // If not found, try to sync from CSE
         if (error.response?.status === 404) {
           try {
             toast.loading('Fetching data from CSE...', { id: 'cse-fetch' });
@@ -98,33 +109,35 @@ const StockView = () => {
     fetchFinancials('cashflow');
   }, [currentSymbol, periodTypes]);
 
-  // Fetch compare data when compare mode is active
+  // Fetch compare data for each section independently
   useEffect(() => {
-    const fetchCompareData = async () => {
+    const fetchCompareDataForSection = async (section) => {
       if (!isCompareMode || compareStockSymbols.length === 0) {
-        setCompareData([]);
+        setCompareData(prev => ({ ...prev, [section]: [] }));
         return;
       }
 
       try {
-        // Fetch financials for each comparison stock
-        const allCompareData = await Promise.all(
+        const sectionCompareData = await Promise.all(
           compareStockSymbols.map(async (sym) => {
             const data = await getFinancials(sym, {
-              periodType: periodTypes.income, // Use income period type for comparison
+              periodType: periodTypes[section],
               limit: 5
             });
             return { symbol: sym, ...data };
           })
         );
-        setCompareData(allCompareData);
+        setCompareData(prev => ({ ...prev, [section]: sectionCompareData }));
       } catch (error) {
-        console.error('Error fetching compare data:', error);
+        console.error(`Error fetching compare data for ${section}:`, error);
+        setCompareData(prev => ({ ...prev, [section]: [] }));
       }
     };
 
-    fetchCompareData();
-  }, [isCompareMode, compareStockSymbols, periodTypes.income]);
+    fetchCompareDataForSection('income');
+    fetchCompareDataForSection('balance');
+    fetchCompareDataForSection('cashflow');
+  }, [isCompareMode, compareStockSymbols, periodTypes]);
 
   // Handle period type change
   const handlePeriodTypeChange = (section, type) => {
@@ -136,7 +149,7 @@ const StockView = () => {
     setIsCompareMode(enabled);
     if (!enabled) {
       setCompareStockSymbols([]);
-      setCompareData([]);
+      setCompareData({ income: [], balance: [], cashflow: [] });
     }
   };
 
@@ -160,9 +173,9 @@ const StockView = () => {
       {/* Upper Information Band */}
       <UpperInfoBand company={company} />
 
-      {/* Controls Row */}
+      {/* Controls Row - Fixed alignment */}
       <div className="flex items-center justify-between mb-4">
-        {/* Compare Control */}
+        {/* Left side: Compare Control */}
         <CompareControl
           isCompareMode={isCompareMode}
           onToggleMode={handleCompareToggle}
@@ -171,7 +184,7 @@ const StockView = () => {
           mainSymbol={currentSymbol}
         />
 
-        {/* Action Buttons */}
+        {/* Right side: Action Buttons */}
         <div className="flex items-center gap-2">
           <button
             onClick={handleSyncFromCSE}
@@ -208,7 +221,6 @@ const StockView = () => {
       {/* Financial Sections */}
       {currentSymbol && (
         <>
-          {/* Income Statement */}
           <FinancialSection
             section="income"
             symbol={currentSymbol}
@@ -216,10 +228,9 @@ const StockView = () => {
             loading={loading.income}
             periodType={periodTypes.income}
             onPeriodTypeChange={(type) => handlePeriodTypeChange('income', type)}
-            compareData={isCompareMode ? compareData : []}
+            compareData={isCompareMode ? compareData.income : []}
           />
 
-          {/* Balance Sheet */}
           <FinancialSection
             section="balance"
             symbol={currentSymbol}
@@ -227,10 +238,9 @@ const StockView = () => {
             loading={loading.balance}
             periodType={periodTypes.balance}
             onPeriodTypeChange={(type) => handlePeriodTypeChange('balance', type)}
-            compareData={isCompareMode ? compareData : []}
+            compareData={isCompareMode ? compareData.balance : []}
           />
 
-          {/* Cash Flow */}
           <FinancialSection
             section="cashflow"
             symbol={currentSymbol}
@@ -238,7 +248,7 @@ const StockView = () => {
             loading={loading.cashflow}
             periodType={periodTypes.cashflow}
             onPeriodTypeChange={(type) => handlePeriodTypeChange('cashflow', type)}
-            compareData={isCompareMode ? compareData : []}
+            compareData={isCompareMode ? compareData.cashflow : []}
           />
         </>
       )}
@@ -247,4 +257,3 @@ const StockView = () => {
 };
 
 export default StockView;
-

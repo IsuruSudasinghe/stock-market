@@ -33,6 +33,7 @@ const UpperInfoBand = ({ company }) => {
     name,
     symbol,
     isin,
+    category,
     lastTradedPrice,
     closingPrice,
     previousClose,
@@ -53,6 +54,12 @@ const UpperInfoBand = ({ company }) => {
   const isNegative = change < 0;
   const priceColorClass = isPositive ? 'text-positive' : isNegative ? 'text-negative' : 'text-gray-600';
   const bgColorClass = isPositive ? 'bg-green-50' : isNegative ? 'bg-red-50' : 'bg-gray-50';
+
+  // Format percentage only if valid
+  const formatChangePercent = (val) => {
+    if (val === null || val === undefined || !isFinite(val)) return '';
+    return `(${val.toFixed(3)}%)`;
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-6">
@@ -83,6 +90,11 @@ const UpperInfoBand = ({ company }) => {
               <div className="text-sm text-gray-500 mt-1">
                 <span className="font-medium">({symbol})</span>
                 {isin && <span className="ml-3">ISIN : {isin}</span>}
+                {category && (
+                  <span className="ml-3 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                    {category}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -92,16 +104,18 @@ const UpperInfoBand = ({ company }) => {
             {/* Main Price */}
             <div className="text-right">
               <div className="text-4xl font-bold text-slate-800">
-                {(lastTradedPrice || closingPrice)?.toFixed(2) || '—'}
+                {(lastTradedPrice || closingPrice)?.toFixed(3) || '—'}
               </div>
               <div className={`flex items-center justify-end gap-2 mt-1 ${priceColorClass}`}>
                 <span className={`px-2 py-0.5 rounded text-sm font-medium ${bgColorClass}`}>
                   {isNegative ? '▼' : isPositive ? '▲' : ''}
-                  {' '}{change >= 0 ? '+' : ''}{change?.toFixed(2) || '0.00'}
+                  {' '}{change >= 0 ? '+' : ''}{change?.toFixed(3) || '0.000'}
                 </span>
-                <span className={`px-2 py-0.5 rounded text-sm font-medium ${bgColorClass}`}>
-                  ({changePercentage?.toFixed(2) || '0.00'}%)
-                </span>
+                {formatChangePercent(changePercentage) && (
+                  <span className={`px-2 py-0.5 rounded text-sm font-medium ${bgColorClass}`}>
+                    {formatChangePercent(changePercentage)}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -110,7 +124,7 @@ const UpperInfoBand = ({ company }) => {
               <div className="text-center">
                 <div className="text-xs text-gray-500 uppercase tracking-wide">Close Price (Rs.)</div>
                 <div className="text-2xl font-bold text-slate-800 mt-1">
-                  {closingPrice?.toFixed(2) || '—'}
+                  {closingPrice?.toFixed(3) || '—'}
                 </div>
               </div>
             </div>
@@ -118,7 +132,7 @@ const UpperInfoBand = ({ company }) => {
               <div className="text-center">
                 <div className="text-xs text-gray-500 uppercase tracking-wide">Previous Close (Rs.)</div>
                 <div className="text-2xl font-bold text-slate-800 mt-1">
-                  {previousClose?.toFixed(2) || '—'}
+                  {previousClose?.toFixed(3) || '—'}
                 </div>
               </div>
             </div>
@@ -130,20 +144,20 @@ const UpperInfoBand = ({ company }) => {
       <div className="px-6 py-4 bg-slate-50 border-b border-gray-100">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <InfoItem 
-            label="Turnover(Rs)" 
+            label="Turnover (Rs.)" 
             value={formatCurrency(tdyTurnover)} 
           />
           <InfoItem 
             label="Share Volume" 
-            value={formatCurrency(tdyShareVolume)?.replace('.00', '')} 
+            value={tdyShareVolume ? formatNumber(tdyShareVolume, 0) : '—'} 
           />
           <InfoItem 
             label="Trade Volume" 
-            value={formatCurrency(tdyTradeVolume)?.replace('.00', '')} 
+            value={tdyTradeVolume ? formatNumber(tdyTradeVolume, 0) : '—'} 
           />
           <InfoItem 
-            label="Day's Price Range" 
-            value={`${hiTrade?.toFixed(2) || '—'} - ${lowTrade?.toFixed(2) || '—'}`} 
+            label="Day's Price Range (Rs.)" 
+            value={`${hiTrade?.toFixed(3) || '—'} - ${lowTrade?.toFixed(3) || '—'}`} 
           />
         </div>
       </div>
@@ -156,17 +170,17 @@ const UpperInfoBand = ({ company }) => {
             value={formatCurrency(marketCap)} 
           />
           <InfoItem 
-            label="Market Cap/Total Market Cap (%)" 
-            value={`${marketCapPercentage?.toFixed(2) || '—'}(%)`} 
+            label="Market Cap/Total Market Cap" 
+            value={marketCapPercentage != null && isFinite(marketCapPercentage) ? `${marketCapPercentage.toFixed(3)}%` : '—'} 
           />
           <InfoItem 
             label="Beta Values Against ASPI"
-            value={beta?.triASIBetaValue?.toFixed(2) || '—'}
+            value={beta?.triASIBetaValue?.toFixed(3) || '—'}
             subLabel={beta?.triASIBetaPeriod ? `(As of ${beta.quarter ? `Q${beta.quarter}` : ''} ${beta.triASIBetaPeriod})` : ''}
           />
           <InfoItem 
             label="Beta Values Against S&P SL20"
-            value={beta?.betaValueSPSL?.toFixed(2) || '—'}
+            value={beta?.betaValueSPSL?.toFixed(3) || '—'}
             subLabel={beta?.triASIBetaPeriod ? `(As of ${beta.quarter ? `Q${beta.quarter}` : ''} ${beta.triASIBetaPeriod})` : ''}
           />
         </div>
@@ -176,4 +190,3 @@ const UpperInfoBand = ({ company }) => {
 };
 
 export default UpperInfoBand;
-

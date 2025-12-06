@@ -5,22 +5,48 @@ const Company = require('../models/Company');
 // GET /api/companies - List/search companies
 router.get('/', async (req, res, next) => {
   try {
-    const { q } = req.query;
+    const { q, category } = req.query;
     let query = {};
     
     if (q) {
-      query = {
-        $or: [
-          { symbol: { $regex: q, $options: 'i' } },
-          { name: { $regex: q, $options: 'i' } }
-        ]
-      };
+      query.$or = [
+        { symbol: { $regex: q, $options: 'i' } },
+        { name: { $regex: q, $options: 'i' } }
+      ];
+    }
+    
+    if (category) {
+      query.category = category;
     }
     
     const companies = await Company.find(query)
-      .select('symbol name isin lastTradedPrice closingPrice change changePercentage')
-      .limit(50)
+      .select('symbol name isin category lastTradedPrice closingPrice change changePercentage marketCap')
+      .limit(100)
       .sort({ symbol: 1 });
+    
+    res.json(companies);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/companies/categories - Get all unique categories
+router.get('/categories', async (req, res, next) => {
+  try {
+    const categories = await Company.distinct('category');
+    // Filter out empty categories
+    const validCategories = categories.filter(c => c && c.trim() !== '');
+    res.json(validCategories);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/companies/by-category/:category - Get all companies in a category
+router.get('/by-category/:category', async (req, res, next) => {
+  try {
+    const companies = await Company.find({ category: req.params.category })
+      .sort({ marketCap: -1 }); // Sort by market cap descending
     
     res.json(companies);
   } catch (err) {
@@ -96,4 +122,3 @@ router.delete('/:symbol', async (req, res, next) => {
 });
 
 module.exports = router;
-

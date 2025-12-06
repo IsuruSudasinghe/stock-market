@@ -3,21 +3,21 @@
     "name": "Revenue",
     "key": "revenue",
     "section": "income",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Operating Expense",
     "key": "operatingExpense",
     "section": "income",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Net Income",
     "key": "netIncome",
     "section": "income",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
@@ -31,14 +31,14 @@
     "name": "Earnings Per Share",
     "key": "eps",
     "section": "income",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "EBITDA",
     "key": "ebitda",
     "section": "income",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
@@ -52,28 +52,28 @@
     "name": "Cash and Short-term Investments",
     "key": "cashAndShortTermInvestments",
     "section": "balance",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Total Assets",
     "key": "totalAssets",
     "section": "balance",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Total Liabilities",
     "key": "totalLiabilities",
     "section": "balance",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Total Equity",
     "key": "totalEquity",
     "section": "balance",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
@@ -108,36 +108,35 @@
     "name": "Cash from Operations",
     "key": "cashFromOperations",
     "section": "cashflow",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Cash from Investing",
     "key": "cashFromInvesting",
     "section": "cashflow",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Cash from Financing",
     "key": "cashFromFinancing",
     "section": "cashflow",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Net Change in Cash",
     "key": "netChangeInCash",
     "section": "cashflow",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   },
   {
     "name": "Free Cash Flow",
     "key": "freeCashFlow",
     "section": "cashflow",
-    "unit": "USD",
+    "unit": "LKR",
     "isDefault": true
   }
 ]
-

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCompanies } from '../utils/api';
+import { getCompanies, getCompany } from '../utils/api';
 
 const CompareControl = ({
   isCompareMode,
@@ -12,7 +12,36 @@ const CompareControl = ({
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [categoryHints, setCategoryHints] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Load same-category companies when compare mode is enabled
+  useEffect(() => {
+    const loadCategoryHints = async () => {
+      if (!isCompareMode || !mainSymbol) {
+        setCategoryHints([]);
+        return;
+      }
+
+      try {
+        const mainCompany = await getCompany(mainSymbol);
+        if (mainCompany?.category) {
+          const sameCategory = await getCompanies('', mainCompany.category);
+          // Filter out main stock and already selected
+          const filtered = sameCategory.filter(
+            c => c.symbol !== mainSymbol && !selectedStocks.includes(c.symbol)
+          );
+          setCategoryHints(filtered.slice(0, 5)); // Show top 5
+        } else {
+          setCategoryHints([]);
+        }
+      } catch (error) {
+        console.error('Error loading category hints:', error);
+      }
+    };
+
+    loadCategoryHints();
+  }, [isCompareMode, mainSymbol, selectedStocks]);
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -41,7 +70,7 @@ const CompareControl = ({
   }, [searchQuery, mainSymbol, selectedStocks]);
 
   const handleAddStock = (symbol) => {
-    if (selectedStocks.length < maxStocks - 1) { // -1 because main stock counts
+    if (selectedStocks.length < maxStocks - 1) {
       onStocksChange([...selectedStocks, symbol]);
     }
     setSearchQuery('');
@@ -53,7 +82,7 @@ const CompareControl = ({
   };
 
   return (
-    <div className="flex items-center gap-4 mb-6">
+    <div className="flex items-center gap-4">
       {/* Mode Toggle */}
       <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
         <button
@@ -105,6 +134,23 @@ const CompareControl = ({
               </button>
             </span>
           ))}
+
+          {/* Category Hints */}
+          {categoryHints.length > 0 && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 border border-amber-200 rounded-full">
+              <span className="text-xs text-amber-700 font-medium">Same category:</span>
+              {categoryHints.map((company) => (
+                <button
+                  key={company.symbol}
+                  onClick={() => handleAddStock(company.symbol)}
+                  disabled={selectedStocks.length >= maxStocks - 1 || selectedStocks.includes(company.symbol)}
+                  className="px-2 py-0.5 text-xs font-medium text-amber-700 bg-amber-100 rounded hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {company.symbol}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Add Stock Button */}
           {selectedStocks.length < maxStocks - 1 && (
@@ -170,4 +216,3 @@ const CompareControl = ({
 };
 
 export default CompareControl;
-

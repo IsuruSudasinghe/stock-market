@@ -167,13 +167,22 @@ const FinancialChart = ({
     );
   }
 
+  // Calculate dynamic width based on number of metrics
+  const barCount = metrics.length + (compareData.length * metrics.length);
+  const minChartWidth = 400;
+  const barsPerGroup = Math.max(1, barCount);
+  // Standard bar size when there's 2 bars, scale down when more
+  const standardBarSize = 35;
+  const dynamicBarSize = barsPerGroup <= 2 ? standardBarSize : Math.max(20, standardBarSize - (barsPerGroup - 2) * 5);
+  
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          barCategoryGap="20%"
+          barCategoryGap="25%"
+          barSize={dynamicBarSize}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
