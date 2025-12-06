@@ -10,14 +10,26 @@ const api = axios.create({
 });
 
 // Company endpoints
-export const getCompanies = async (search = '') => {
-  const params = search ? { q: search } : {};
+export const getCompanies = async (search = '', category = '') => {
+  const params = {};
+  if (search) params.q = search;
+  if (category) params.category = category;
   const response = await api.get('/companies', { params });
   return response.data;
 };
 
 export const getCompany = async (symbol) => {
   const response = await api.get(`/companies/${encodeURIComponent(symbol)}`);
+  return response.data;
+};
+
+export const getCategories = async () => {
+  const response = await api.get('/companies/categories');
+  return response.data;
+};
+
+export const getCompaniesByCategory = async (category) => {
+  const response = await api.get(`/companies/by-category/${encodeURIComponent(category)}`);
   return response.data;
 };
 
@@ -84,8 +96,29 @@ export const updateMetric = async (key, metricData) => {
   return response.data;
 };
 
+export const reorderMetrics = async (metrics) => {
+  const response = await api.put('/metrics/reorder', { metrics });
+  return response.data;
+};
+
 export const deleteMetric = async (key) => {
   const response = await api.delete(`/metrics/${encodeURIComponent(key)}`);
+  return response.data;
+};
+
+// Category metrics endpoints
+export const getCategoryMetrics = async (category) => {
+  const response = await api.get(`/category-metrics/${encodeURIComponent(category)}`);
+  return response.data;
+};
+
+export const setCategoryMetrics = async (category, metrics) => {
+  const response = await api.post(`/category-metrics/${encodeURIComponent(category)}`, { metrics });
+  return response.data;
+};
+
+export const deleteCategoryMetrics = async (category) => {
+  const response = await api.delete(`/category-metrics/${encodeURIComponent(category)}`);
   return response.data;
 };
 
@@ -101,4 +134,3 @@ export const compareStocks = async (symbols, metricKey, periodType = 'quarterly'
 };
 
 export default api;
-

@@ -8,8 +8,68 @@ router.get('/', async (req, res, next) => {
     const { section } = req.query;
     const query = section ? { section } : {};
     
-    const metrics = await MetricDefinition.find(query).sort({ section: 1, name: 1 });
+    const metrics = await MetricDefinition.find(query).sort({ section: 1, order: 1, name: 1 });
     res.json(metrics);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/metrics - Create new metric definition
+router.post('/', async (req, res, next) => {
+  try {
+    const { name, key, section, unit, isDefault } = req.body;
+    
+    if (!name || !key || !section) {
+      return res.status(400).json({ error: 'name, key, and section are required' });
+    }
+    
+    const existing = await MetricDefinition.findOne({ key });
+    if (existing) {
+      return res.status(409).json({ error: 'Metric with this key already exists' });
+    }
+    
+    // Get the highest order for this section and add 1 (add to end)
+    const maxOrderMetric = await MetricDefinition.findOne({ section })
+      .sort({ order: -1 })
+      .limit(1);
+    const newOrder = maxOrderMetric ? maxOrderMetric.order + 1 : 0;
+    
+    const metric = await MetricDefinition.create({
+      name,
+      key,
+      section,
+      unit: unit || 'USD',
+      isDefault: isDefault || false,
+      order: newOrder
+    });
+    
+    res.status(201).json(metric);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/metrics/reorder - Bulk update metric orders (MUST be before /:key routes)
+router.put('/reorder', async (req, res, next) => {
+  try {
+    const { metrics } = req.body; // Array of { key, order }
+    
+    if (!Array.isArray(metrics)) {
+      return res.status(400).json({ error: 'metrics must be an array' });
+    }
+    
+    const updatePromises = metrics.map(({ key, order }) =>
+      MetricDefinition.findOneAndUpdate(
+        { key },
+        { order },
+        { new: true }
+      )
+    );
+    
+    await Promise.all(updatePromises);
+    
+    res.json({ message: 'Metrics reordered successfully' });
   } catch (err) {
     next(err);
   }
@@ -30,42 +90,19 @@ router.get('/:key', async (req, res, next) => {
   }
 });
 
-// POST /api/metrics - Create new metric definition
-router.post('/', async (req, res, next) => {
-  try {
-    const { name, key, section, unit, isDefault } = req.body;
-    
-    if (!name || !key || !section) {
-      return res.status(400).json({ error: 'name, key, and section are required' });
-    }
-    
-    const existing = await MetricDefinition.findOne({ key });
-    if (existing) {
-      return res.status(409).json({ error: 'Metric with this key already exists' });
-    }
-    
-    const metric = await MetricDefinition.create({
-      name,
-      key,
-      section,
-      unit: unit || 'USD',
-      isDefault: isDefault || false
-    });
-    
-    res.status(201).json(metric);
-  } catch (err) {
-    next(err);
-  }
-});
-
 // PUT /api/metrics/:key - Update metric definition
 router.put('/:key', async (req, res, next) => {
   try {
-    const { name, section, unit, isDefault } = req.body;
+    const { name, section, unit, isDefault, order } = req.body;
+    
+    const updateData = { name, section, unit, isDefault };
+    if (order !== undefined) {
+      updateData.order = order;
+    }
     
     const metric = await MetricDefinition.findOneAndUpdate(
       { key: req.params.key },
-      { name, section, unit, isDefault },
+      updateData,
       { new: true, runValidators: true }
     );
     
