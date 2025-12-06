@@ -93,9 +93,11 @@ const FinancialChart = ({
 
       // Add compare stock data
       compareData.forEach((stockData, stockIndex) => {
-        const matchingItem = stockData.data?.find(d => d.periodISO === item.periodISO);
+        const matchingItem = stockData.items?.find(d => d.periodISO === item.periodISO);
         metrics.forEach((metricKey) => {
-          chartItem[`${stockData.symbol}_${metricKey}`] = matchingItem?.value ?? null;
+          // Get value from the matching item's data object
+          const value = matchingItem?.data?.[metricKey] ?? matchingItem?.data?.custom?.[metricKey] ?? null;
+          chartItem[`${stockData.symbol}_${metricKey}`] = value;
         });
       });
 

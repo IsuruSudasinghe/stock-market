@@ -25,6 +25,18 @@ const QUARTERS = [
   { label: 'Q4 (Oct)', value: 'Q4', month: 'Oct' }
 ];
 
+// Standard metric keys that are defined in the MongoDB schema
+// Custom metrics should be stored under data.custom instead
+const STANDARD_METRIC_KEYS = [
+  // Income Statement
+  'revenue', 'operatingExpense', 'netIncome', 'netProfitMargin', 'eps', 'ebitda', 'effectiveTaxRate',
+  // Balance Sheet
+  'cashAndShortTermInvestments', 'totalAssets', 'totalLiabilities', 'totalEquity', 
+  'sharesOutstanding', 'priceToBook', 'returnOnAssets', 'returnOnCapital',
+  // Cash Flow
+  'cashFromOperations', 'cashFromInvesting', 'cashFromFinancing', 'netChangeInCash', 'freeCashFlow'
+];
+
 const DataEntry = () => {
   const { symbol: urlSymbol } = useParams();
   const navigate = useNavigate();
@@ -195,13 +207,33 @@ const DataEntry = () => {
 
     const periodInfo = getPeriodInfo();
     
+    // Separate standard metrics from custom metrics
+    const standardData = {};
+    const customData = {};
+    
+    Object.entries(financialForm.data).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        if (STANDARD_METRIC_KEYS.includes(key)) {
+          standardData[key] = value;
+        } else {
+          customData[key] = value;
+        }
+      }
+    });
+    
+    // Build the final data object with custom metrics nested properly
+    const finalData = {
+      ...standardData,
+      ...(Object.keys(customData).length > 0 ? { custom: customData } : {})
+    };
+    
     setLoading(true);
     try {
       await createFinancialData(selectedSymbol, {
         periodType: financialForm.periodType,
         periodLabel: periodInfo.label,
         periodISO: periodInfo.iso,
-        data: financialForm.data,
+        data: finalData,
         force: true // Allow upsert
       });
       

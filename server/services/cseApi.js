@@ -9,16 +9,19 @@ const CSE_BASE_URL = process.env.CSE_BASE_URL || 'https://www.cse.lk/api';
  */
 const fetchCompanyInfo = async (symbol) => {
   try {
-    // The CSE API endpoint for company info
+    // Create form-urlencoded data (like Python's requests.post with data=)
+    const params = new URLSearchParams();
+    params.append('symbol', symbol);
+
     const response = await axios.post(
       `${CSE_BASE_URL}/companyInfoSummery`,
-      { symbol },
+      params,
       {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'application/json'
         },
-        timeout: 10000 // 10 second timeout
+        timeout: 10000
       }
     );
     
@@ -37,12 +40,17 @@ const fetchCompanyInfo = async (symbol) => {
  */
 const fetchChartData = async (chartId, period = 2) => {
   try {
+    // Create form-urlencoded data
+    const params = new URLSearchParams();
+    params.append('chartId', chartId);
+    params.append('period', period);
+
     const response = await axios.post(
       `${CSE_BASE_URL}/chartData`,
-      { chartId, period },
+      params,
       {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'application/json'
         },
         timeout: 10000
@@ -60,4 +68,3 @@ module.exports = {
   fetchCompanyInfo,
   fetchChartData
 };
-
