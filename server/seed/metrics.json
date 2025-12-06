@@ -1,0 +1,143 @@
+[
+  {
+    "name": "Revenue",
+    "key": "revenue",
+    "section": "income",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Operating Expense",
+    "key": "operatingExpense",
+    "section": "income",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Net Income",
+    "key": "netIncome",
+    "section": "income",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Net Profit Margin",
+    "key": "netProfitMargin",
+    "section": "income",
+    "unit": "percentage",
+    "isDefault": true
+  },
+  {
+    "name": "Earnings Per Share",
+    "key": "eps",
+    "section": "income",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "EBITDA",
+    "key": "ebitda",
+    "section": "income",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Effective Tax Rate",
+    "key": "effectiveTaxRate",
+    "section": "income",
+    "unit": "percentage",
+    "isDefault": true
+  },
+  {
+    "name": "Cash and Short-term Investments",
+    "key": "cashAndShortTermInvestments",
+    "section": "balance",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Total Assets",
+    "key": "totalAssets",
+    "section": "balance",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Total Liabilities",
+    "key": "totalLiabilities",
+    "section": "balance",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Total Equity",
+    "key": "totalEquity",
+    "section": "balance",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Shares Outstanding",
+    "key": "sharesOutstanding",
+    "section": "balance",
+    "unit": "shares",
+    "isDefault": true
+  },
+  {
+    "name": "Price to Book",
+    "key": "priceToBook",
+    "section": "balance",
+    "unit": "ratio",
+    "isDefault": true
+  },
+  {
+    "name": "Return on Assets",
+    "key": "returnOnAssets",
+    "section": "balance",
+    "unit": "percentage",
+    "isDefault": true
+  },
+  {
+    "name": "Return on Capital",
+    "key": "returnOnCapital",
+    "section": "balance",
+    "unit": "percentage",
+    "isDefault": true
+  },
+  {
+    "name": "Cash from Operations",
+    "key": "cashFromOperations",
+    "section": "cashflow",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Cash from Investing",
+    "key": "cashFromInvesting",
+    "section": "cashflow",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Cash from Financing",
+    "key": "cashFromFinancing",
+    "section": "cashflow",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Net Change in Cash",
+    "key": "netChangeInCash",
+    "section": "cashflow",
+    "unit": "USD",
+    "isDefault": true
+  },
+  {
+    "name": "Free Cash Flow",
+    "key": "freeCashFlow",
+    "section": "cashflow",
+    "unit": "USD",
+    "isDefault": true
+  }
+]
+

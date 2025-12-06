@@ -1,0 +1,23 @@
+[
+  { "symbol": "JKH.N0000", "name": "JOHN KEELLS HOLDINGS PLC", "isin": "LK0092N00003" },
+  { "symbol": "COMB.N0000", "name": "COMMERCIAL BANK OF CEYLON PLC", "isin": "LK0053N00008" },
+  { "symbol": "HNB.N0000", "name": "HATTON NATIONAL BANK PLC", "isin": "LK0080N00005" },
+  { "symbol": "SAMP.N0000", "name": "SAMPATH BANK PLC", "isin": "LK0128N00005" },
+  { "symbol": "DIAL.N0000", "name": "DIALOG AXIATA PLC", "isin": "LK0308N00003" },
+  { "symbol": "CALT.N0000", "name": "CEYLON & FOREIGN TRADES PLC", "isin": "LK0043N00009" },
+  { "symbol": "NEST.N0000", "name": "NESTLE LANKA PLC", "isin": "LK0104N00008" },
+  { "symbol": "CTC.N0000", "name": "CEYLON TOBACCO COMPANY PLC", "isin": "LK0048N00008" },
+  { "symbol": "HAYL.N0000", "name": "HAYLEYS PLC", "isin": "LK0081N00003" },
+  { "symbol": "LOLC.N0000", "name": "LOLC HOLDINGS PLC", "isin": "LK0098N00006" },
+  { "symbol": "EXPO.N0000", "name": "EXPOLANKA HOLDINGS PLC", "isin": "LK0316N00006" },
+  { "symbol": "DIPD.N0000", "name": "DIPPED PRODUCTS PLC", "isin": "LK0062N00009" },
+  { "symbol": "RICH.N0000", "name": "RICHARD PIERIS & COMPANY PLC", "isin": "LK0122N00008" },
+  { "symbol": "CCS.N0000", "name": "CEYLON COLD STORES PLC", "isin": "LK0042N00001" },
+  { "symbol": "SINS.N0000", "name": "SINGER (SRI LANKA) PLC", "isin": "LK0129N00003" },
+  { "symbol": "TKYO.N0000", "name": "TOKYO CEMENT COMPANY (LANKA) PLC", "isin": "LK0145N00009" },
+  { "symbol": "CARS.N0000", "name": "CARSON CUMBERBATCH PLC", "isin": "LK0039N00007" },
+  { "symbol": "HNBF.N0000", "name": "HNB FINANCE PLC", "isin": "LK0385N00001" },
+  { "symbol": "SLTL.N0000", "name": "SRI LANKA TELECOM PLC", "isin": "LK0132N00007" },
+  { "symbol": "ASIR.N0000", "name": "ASIRI HOSPITAL HOLDINGS PLC", "isin": "LK0283N00000" }
+]
+
