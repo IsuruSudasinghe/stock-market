@@ -651,7 +651,7 @@ const DataEntry = () => {
                     onChange={(e) => setCustomMetricForm(prev => ({ ...prev, unit: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
-                    <option value="USD">USD</option>
+                    <option value="LKR">LKR</option>
                     <option value="percentage">Percentage</option>
                     <option value="ratio">Ratio</option>
                     <option value="shares">Shares</option>

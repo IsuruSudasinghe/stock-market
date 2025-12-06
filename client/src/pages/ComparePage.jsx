@@ -362,18 +362,23 @@ const CompareTable = ({
                   formatter={(value) => [formatNumber(value), '']}
                 />
                 <Legend />
-                {selectedForChart.map((symbol, idx) => (
-                  <Line
-                    key={symbol}
-                    type="monotone"
-                    dataKey={symbol}
-                    stroke={COLORS[idx % COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                    connectNulls
-                  />
-                ))}
+                {selectedForChart.map((symbol) => {
+                  // Use the same index logic as the table for color consistency
+                  const originalIdx = companies.findIndex(c => c.symbol === symbol);
+                  const colorIdx = originalIdx >= 0 ? originalIdx : selectedForChart.indexOf(symbol);
+                  return (
+                    <Line
+                      key={symbol}
+                      type="monotone"
+                      dataKey={symbol}
+                      stroke={COLORS[colorIdx % COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                      connectNulls
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
           </div>
