@@ -18,7 +18,7 @@ const metricDefinitionSchema = new mongoose.Schema({
   },
   unit: {
     type: String,
-    default: 'USD'
+    default: 'LKR'
   },
   isDefault: {
     type: Boolean,
