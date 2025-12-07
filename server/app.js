@@ -53,7 +53,7 @@ app.use((req, res) => {
 
 // Database connection and server start
 const PORT = process.env.PORT || 4000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/stocktracker';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI ||'mongodb://localhost:27017/stocktracker';
 
 mongoose.connect(MONGO_URI)
   .then(() => {

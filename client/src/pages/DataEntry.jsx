@@ -4,14 +4,22 @@ import toast from 'react-hot-toast';
 import SearchSelect from '../components/SearchSelect';
 import {
   getCompany,
+  getCompanies,
+  getCategories,
   syncCompanyFromCSE,
   createCompany,
+  updateCompany,
+  deleteCompany,
   getFinancials,
   createFinancialData,
   getMetrics,
   createMetric,
-  getCategoryMetrics
+  deleteMetric,
+  getCategoryMetrics,
+  setCategoryMetrics,
+  reorderMetrics
 } from '../utils/api';
+import { formatToThreeDecimals } from '../utils/formatters';
 
 const SECTIONS = [
   { id: 'income', name: 'Income Statement' },
@@ -43,17 +51,22 @@ const DataEntry = () => {
   const navigate = useNavigate();
 
   // State
-  const [activeTab, setActiveTab] = useState('company'); // 'company' or 'financials'
+  const [activeTab, setActiveTab] = useState('company'); // 'company', 'financials', or 'manage'
   const [selectedSymbol, setSelectedSymbol] = useState(urlSymbol || '');
   const [company, setCompany] = useState(null);
+  const [allCompanies, setAllCompanies] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [metrics, setMetrics] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [existingFinancials, setExistingFinancials] = useState(null);
 
   // Company form state
   const [companyForm, setCompanyForm] = useState({
     symbol: '',
     name: '',
-    isin: ''
+    isin: '',
+    category: ''
   });
 
   // Financial form state
@@ -74,6 +87,13 @@ const DataEntry = () => {
     unit: 'LKR'
   });
 
+  // Load initial data
+  useEffect(() => {
+    loadAllCompanies();
+    loadCategories();
+    loadMetrics();
+  }, []);
+
   // Load company data if symbol is provided
   useEffect(() => {
     if (selectedSymbol) {
@@ -81,10 +101,34 @@ const DataEntry = () => {
     }
   }, [selectedSymbol]);
 
-  // Load base metrics on mount
+  // Load existing financial data when period changes
   useEffect(() => {
-    loadMetrics();
-  }, []);
+    if (selectedSymbol && activeTab === 'financials') {
+      loadExistingFinancials();
+    }
+  }, [selectedSymbol, financialForm.periodType, financialForm.year, financialForm.quarter, activeTab]);
+
+  // Track if company has existing financial data
+  const [hasExistingFinancialData, setHasExistingFinancialData] = useState(false);
+
+  // Check if company has existing financial data
+  useEffect(() => {
+    const checkExistingData = async () => {
+      if (!selectedSymbol) {
+        setHasExistingFinancialData(false);
+        return;
+      }
+
+      try {
+        const data = await getFinancials(selectedSymbol, { limit: 1 });
+        setHasExistingFinancialData(data?.items && data.items.length > 0);
+      } catch {
+        setHasExistingFinancialData(false);
+      }
+    };
+
+    checkExistingData();
+  }, [selectedSymbol]);
 
   // Load category-specific metrics when company category changes
   useEffect(() => {
@@ -92,6 +136,12 @@ const DataEntry = () => {
       // Always start with base metrics
       const baseMetrics = await getMetrics();
       
+      // If company has existing financial data, use only base metrics (don't change)
+      if (hasExistingFinancialData) {
+        setMetrics(baseMetrics);
+        return;
+      }
+
       if (!company?.category) {
         // If no category, use only base metrics
         setMetrics(baseMetrics);
@@ -101,15 +151,10 @@ const DataEntry = () => {
       try {
         const categoryMetrics = await getCategoryMetrics(company.category);
         if (categoryMetrics && categoryMetrics.length > 0) {
-          const baseMetricKeys = new Set(baseMetrics.map(m => m.key));
-          
-          // Filter category metrics to only include custom ones (not in base)
-          const customCategoryMetrics = categoryMetrics.filter(m => !baseMetricKeys.has(m.key));
-          
-          // Replace metrics: base metrics + category-specific custom metrics (not accumulate)
-          setMetrics([...baseMetrics, ...customCategoryMetrics]);
+          // Use category metrics as the full set (they include defaults)
+          setMetrics(categoryMetrics);
         } else {
-          // No category metrics, just use base metrics
+          // No category metrics yet - use base metrics as defaults
           setMetrics(baseMetrics);
         }
       } catch (error) {
@@ -119,7 +164,25 @@ const DataEntry = () => {
     };
 
     loadCategoryMetrics();
-  }, [company?.category]);
+  }, [company?.category, hasExistingFinancialData]);
+
+  const loadAllCompanies = async () => {
+    try {
+      const data = await getCompanies();
+      setAllCompanies(data);
+    } catch (error) {
+      console.error('Error loading companies:', error);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
 
   const loadCompanyData = async (sym) => {
     try {
@@ -128,12 +191,46 @@ const DataEntry = () => {
       setCompanyForm({
         symbol: data.symbol || '',
         name: data.name || '',
-        isin: data.isin || ''
+        isin: data.isin || '',
+        category: data.category || ''
       });
     } catch (error) {
       if (error.response?.status !== 404) {
         console.error('Error loading company:', error);
       }
+    }
+  };
+
+  const loadExistingFinancials = async () => {
+    try {
+      const periodISO = financialForm.periodType === 'annual' 
+        ? financialForm.year 
+        : `${financialForm.year}-${financialForm.quarter}`;
+
+      const data = await getFinancials(selectedSymbol, {
+        periodType: financialForm.periodType,
+        limit: 1
+      });
+
+      const existing = data?.items?.find(i => i.periodISO === periodISO);
+      if (existing) {
+        setExistingFinancials(existing);
+        // Merge existing data into form (flatten custom metrics)
+        const formData = { ...existing.data };
+        if (existing.data?.custom) {
+          Object.entries(existing.data.custom).forEach(([k, v]) => {
+            formData[k] = v;
+          });
+          delete formData.custom;
+        }
+        setFinancialForm(prev => ({ ...prev, data: formData }));
+      } else {
+        setExistingFinancials(null);
+        setFinancialForm(prev => ({ ...prev, data: {} }));
+      }
+    } catch (error) {
+      setExistingFinancials(null);
+      setFinancialForm(prev => ({ ...prev, data: {} }));
     }
   };
 
@@ -152,7 +249,8 @@ const DataEntry = () => {
     setCompanyForm({
       symbol: company.symbol,
       name: company.name || '',
-      isin: company.isin || ''
+      isin: company.isin || '',
+      category: company.category || ''
     });
   };
 
@@ -172,8 +270,10 @@ const DataEntry = () => {
       setCompanyForm({
         symbol: data.symbol,
         name: data.name,
-        isin: data.isin || ''
+        isin: data.isin || '',
+        category: data.category || ''
       });
+      loadAllCompanies();
       toast.success('Company data fetched successfully', { id: 'fetch' });
     } catch (error) {
       toast.error('Failed to fetch from CSE', { id: 'fetch' });
@@ -183,8 +283,8 @@ const DataEntry = () => {
     }
   };
 
-  // Create company manually
-  const handleCreateCompany = async (e) => {
+  // Save company (create or update)
+  const handleSaveCompany = async (e) => {
     e.preventDefault();
     if (!companyForm.symbol || !companyForm.name) {
       toast.error('Symbol and name are required');
@@ -193,20 +293,60 @@ const DataEntry = () => {
 
     setLoading(true);
     try {
-      const data = await createCompany(companyForm);
+      let data;
+      if (company && company.symbol === companyForm.symbol) {
+        // Update existing
+        data = await updateCompany(company.symbol, companyForm);
+        toast.success('Company updated successfully');
+      } else {
+        // Create new
+        data = await createCompany(companyForm);
+        toast.success('Company created successfully');
+      }
       setCompany(data);
       setSelectedSymbol(data.symbol);
-      toast.success('Company created successfully');
+      loadAllCompanies();
+      loadCategories();
     } catch (error) {
       if (error.response?.status === 409) {
         toast.error('Company already exists');
       } else {
-        toast.error('Failed to create company');
+        toast.error('Failed to save company');
       }
-      console.error('Create company error:', error);
+      console.error('Save company error:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Delete company
+  const handleDeleteCompany = async () => {
+    if (!company) return;
+
+    setLoading(true);
+    try {
+      await deleteCompany(company.symbol);
+      toast.success('Company deleted successfully');
+      setCompany(null);
+      setSelectedSymbol('');
+      setCompanyForm({ symbol: '', name: '', isin: '', category: '' });
+      setShowDeleteConfirm(false);
+      loadAllCompanies();
+    } catch (error) {
+      toast.error('Failed to delete company');
+      console.error('Delete error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Clear form for new company
+  const handleNewCompany = () => {
+    setCompany(null);
+    setSelectedSymbol('');
+    setCompanyForm({ symbol: '', name: '', isin: '', category: '' });
+    setFinancialForm(prev => ({ ...prev, data: {} }));
+    setExistingFinancials(null);
   };
 
   // Get period label and ISO
@@ -234,7 +374,7 @@ const DataEntry = () => {
   };
 
   // Save financial data
-  const handleSaveFinancials = async (e, addAnother = false) => {
+  const handleSaveFinancials = async (e) => {
     e.preventDefault();
     if (!selectedSymbol) {
       toast.error('Please select a company first');
@@ -265,6 +405,8 @@ const DataEntry = () => {
     
     setLoading(true);
     try {
+      const isFirstSave = !hasExistingFinancialData && !existingFinancials;
+      
       await createFinancialData(selectedSymbol, {
         periodType: financialForm.periodType,
         periodLabel: periodInfo.label,
@@ -273,14 +415,36 @@ const DataEntry = () => {
         force: true // Allow upsert
       });
       
-      toast.success('Financial data saved successfully');
-      
-      if (addAnother) {
-        // Reset data but keep period settings
-        setFinancialForm(prev => ({ ...prev, data: {} }));
-      } else {
-        navigate(`/stock/${selectedSymbol}`);
+      // If this is the first time saving financial data for this company
+      // and the company has a category, save current metrics as category defaults
+      if (isFirstSave && company?.category) {
+        try {
+          // Get current metrics for all sections, sorted by order
+          const allMetrics = await getMetrics();
+          const metricsBySection = {
+            income: allMetrics.filter(m => m.section === 'income').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            balance: allMetrics.filter(m => m.section === 'balance').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            cashflow: allMetrics.filter(m => m.section === 'cashflow').sort((a, b) => (a.order || 0) - (b.order || 0))
+          };
+          
+          // Combine all metrics
+          const categoryDefaults = [
+            ...metricsBySection.income,
+            ...metricsBySection.balance,
+            ...metricsBySection.cashflow
+          ];
+          
+          // Always update category defaults when first company saves (overwrites existing if any)
+          await setCategoryMetrics(company.category, categoryDefaults);
+        } catch (error) {
+          // Fail silently - category metrics are optional
+          console.log('Could not set category metrics:', error);
+        }
       }
+      
+      toast.success(existingFinancials ? 'Financial data updated' : 'Financial data saved');
+      setHasExistingFinancialData(true);
+      navigate(`/stock/${selectedSymbol}`);
     } catch (error) {
       toast.error('Failed to save financial data');
       console.error('Save error:', error);
@@ -299,10 +463,33 @@ const DataEntry = () => {
 
     try {
       await createMetric(customMetricForm);
-        toast.success('Custom metric created');
-        setShowCustomMetric(false);
-        setCustomMetricForm({ name: '', key: '', section: 'income', unit: 'LKR' });
-        loadMetrics();
+      toast.success('Custom metric created');
+      setShowCustomMetric(false);
+      setCustomMetricForm({ name: '', key: '', section: 'income', unit: 'LKR' });
+      await loadMetrics();
+      
+      // If company has category and no existing financial data, update category defaults
+      if (company?.category && !hasExistingFinancialData) {
+        try {
+          const allMetrics = await getMetrics();
+          const metricsBySection = {
+            income: allMetrics.filter(m => m.section === 'income').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            balance: allMetrics.filter(m => m.section === 'balance').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            cashflow: allMetrics.filter(m => m.section === 'cashflow').sort((a, b) => (a.order || 0) - (b.order || 0))
+          };
+          
+          const categoryDefaults = [
+            ...metricsBySection.income,
+            ...metricsBySection.balance,
+            ...metricsBySection.cashflow
+          ];
+          
+          await setCategoryMetrics(company.category, categoryDefaults);
+        } catch (error) {
+          // Fail silently
+          console.log('Could not update category metrics:', error);
+        }
+      }
     } catch (error) {
       if (error.response?.status === 409) {
         toast.error('Metric key already exists');
@@ -312,12 +499,149 @@ const DataEntry = () => {
     }
   };
 
-  // Get metrics for current section
-  const sectionMetrics = metrics.filter(m => m.section === financialForm.section);
+  // Delete metric
+  const handleDeleteMetric = async (metricKey) => {
+    if (!window.confirm(`Remove this metric? This will not delete existing data, only the metric definition.`)) {
+      return;
+    }
+
+    try {
+      await deleteMetric(metricKey);
+      toast.success('Metric removed');
+      await loadMetrics();
+      
+      // If company has category and no existing financial data, update category defaults
+      if (company?.category && !hasExistingFinancialData) {
+        try {
+          const allMetrics = await getMetrics();
+          const metricsBySection = {
+            income: allMetrics.filter(m => m.section === 'income').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            balance: allMetrics.filter(m => m.section === 'balance').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            cashflow: allMetrics.filter(m => m.section === 'cashflow').sort((a, b) => (a.order || 0) - (b.order || 0))
+          };
+          
+          const categoryDefaults = [
+            ...metricsBySection.income,
+            ...metricsBySection.balance,
+            ...metricsBySection.cashflow
+          ];
+          
+          await setCategoryMetrics(company.category, categoryDefaults);
+        } catch (error) {
+          // Fail silently
+          console.log('Could not update category metrics:', error);
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to remove metric');
+    }
+  };
+
+  // Drag and drop state
+  const [draggedMetric, setDraggedMetric] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+
+  // Handle drag start
+  const handleDragStart = (e, index) => {
+    setDraggedMetric(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  // Handle drag over
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setDraggedMetric(null);
+    setDragOverIndex(null);
+  };
+
+  // Handle drop
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+
+    if (draggedMetric === null || draggedMetric === dropIndex) {
+      setDraggedMetric(null);
+      return;
+    }
+
+    // Get current section metrics
+    const currentSectionMetrics = metrics
+      .filter(m => m.section === financialForm.section)
+      .sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        return a.name.localeCompare(b.name);
+      });
+
+    // Reorder metrics
+    const reordered = [...currentSectionMetrics];
+    const [removed] = reordered.splice(draggedMetric, 1);
+    reordered.splice(dropIndex, 0, removed);
+
+    // Update order values
+    const updatedMetrics = reordered.map((metric, idx) => ({
+      key: metric.key,
+      order: idx
+    }));
+
+    try {
+      await reorderMetrics(updatedMetrics);
+      toast.success('Metrics reordered');
+      await loadMetrics();
+      
+      // If company has category and no existing financial data, update category defaults
+      if (company?.category && !hasExistingFinancialData) {
+        try {
+          const allMetrics = await getMetrics();
+          const metricsBySection = {
+            income: allMetrics.filter(m => m.section === 'income').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            balance: allMetrics.filter(m => m.section === 'balance').sort((a, b) => (a.order || 0) - (b.order || 0)),
+            cashflow: allMetrics.filter(m => m.section === 'cashflow').sort((a, b) => (a.order || 0) - (b.order || 0))
+          };
+          
+          const categoryDefaults = [
+            ...metricsBySection.income,
+            ...metricsBySection.balance,
+            ...metricsBySection.cashflow
+          ];
+          
+          await setCategoryMetrics(company.category, categoryDefaults);
+        } catch (error) {
+          // Fail silently
+          console.log('Could not update category metrics:', error);
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to reorder metrics');
+      console.error('Reorder error:', error);
+    }
+
+    setDraggedMetric(null);
+  };
+
+  // Get metrics for current section, sorted by order if available
+  const sectionMetrics = metrics
+    .filter(m => m.section === financialForm.section)
+    .sort((a, b) => {
+      // If order exists, sort by order, otherwise by name
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      return a.name.localeCompare(b.name);
+    });
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Data Entry</h1>
+    <div className="max-w-5xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">Data Entry</h1>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-lg w-fit">
@@ -341,6 +665,16 @@ const DataEntry = () => {
         >
           Financial Data
         </button>
+        <button
+          onClick={() => setActiveTab('manage')}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+            activeTab === 'manage'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Manage Companies
+        </button>
       </div>
 
       {/* Company Tab */}
@@ -361,9 +695,11 @@ const DataEntry = () => {
           </div>
 
           <div className="border-t border-gray-100 pt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">Or Enter Manually</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-4">
+              {company ? 'Edit Company Details' : 'Add New Company'}
+            </h3>
             
-            <form onSubmit={handleCreateCompany} className="space-y-4">
+            <form onSubmit={handleSaveCompany} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -374,7 +710,8 @@ const DataEntry = () => {
                     value={companyForm.symbol}
                     onChange={(e) => setCompanyForm(prev => ({ ...prev, symbol: e.target.value.toUpperCase() }))}
                     placeholder="e.g., JKH.N0000"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={!!company}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
                   />
                 </div>
                 <div>
@@ -404,6 +741,24 @@ const DataEntry = () => {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <input
+                  type="text"
+                  value={companyForm.category}
+                  onChange={(e) => setCompanyForm(prev => ({ ...prev, category: e.target.value }))}
+                  placeholder="e.g., Banking, Manufacturing, etc."
+                  list="categories"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <datalist id="categories">
+                  {categories.map(cat => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
+                <p className="text-xs text-gray-500 mt-1">Used for grouping companies in comparison view</p>
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
@@ -421,8 +776,17 @@ const DataEntry = () => {
                   disabled={loading}
                   className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
-                  {company ? 'Update' : 'Create'} Company
+                  {company ? 'Update Company' : 'Create Company'}
                 </button>
+                {company && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="px-4 py-2 text-sm font-medium text-negative bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -436,7 +800,9 @@ const DataEntry = () => {
                   <div><span className="text-gray-500">Symbol:</span> {company.symbol}</div>
                   <div><span className="text-gray-500">Name:</span> {company.name}</div>
                   <div><span className="text-gray-500">ISIN:</span> {company.isin || '—'}</div>
-                  <div><span className="text-gray-500">Last Price:</span> {company.lastTradedPrice?.toFixed(2) || '—'}</div>
+                  <div><span className="text-gray-500">Category:</span> {company.category || '—'}</div>
+                  <div><span className="text-gray-500">Last Price:</span> {formatToThreeDecimals(company.lastTradedPrice)}</div>
+                  <div><span className="text-gray-500">Market Cap:</span> {company.marketCap?.toLocaleString() || '—'}</div>
                 </div>
               </div>
             </div>
@@ -460,7 +826,14 @@ const DataEntry = () => {
               </button>
             </div>
           ) : (
-            <form onSubmit={(e) => handleSaveFinancials(e, false)}>
+            <form onSubmit={handleSaveFinancials}>
+              {/* Period indicator */}
+              {existingFinancials && (
+                <div className="mb-4 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                  Editing existing data for {getPeriodInfo().label}. Changes will update the existing record.
+                </div>
+              )}
+
               {/* Period Selection */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div>
@@ -469,7 +842,7 @@ const DataEntry = () => {
                   </label>
                   <select
                     value={financialForm.periodType}
-                    onChange={(e) => setFinancialForm(prev => ({ ...prev, periodType: e.target.value }))}
+                    onChange={(e) => setFinancialForm(prev => ({ ...prev, periodType: e.target.value, data: {} }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
                     <option value="quarterly">Quarterly</option>
@@ -482,7 +855,7 @@ const DataEntry = () => {
                   </label>
                   <select
                     value={financialForm.year}
-                    onChange={(e) => setFinancialForm(prev => ({ ...prev, year: e.target.value }))}
+                    onChange={(e) => setFinancialForm(prev => ({ ...prev, year: e.target.value, data: {} }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
                     {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
@@ -497,7 +870,7 @@ const DataEntry = () => {
                     </label>
                     <select
                       value={financialForm.quarter}
-                      onChange={(e) => setFinancialForm(prev => ({ ...prev, quarter: e.target.value }))}
+                      onChange={(e) => setFinancialForm(prev => ({ ...prev, quarter: e.target.value, data: {} }))}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
                       {QUARTERS.map(q => (
@@ -545,12 +918,41 @@ const DataEntry = () => {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  {sectionMetrics.map(metric => (
-                    <div key={metric.key}>
-                      <label className="block text-sm text-gray-600 mb-1">
-                        {metric.name}
-                        <span className="text-gray-400 text-xs ml-1">({metric.unit})</span>
-                      </label>
+                  {sectionMetrics.map((metric, index) => (
+                    <div
+                      key={metric.key}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
+                      onDrop={(e) => handleDrop(e, index)}
+                      className={`relative cursor-move transition-all ${
+                        draggedMetric === index ? 'opacity-50' : ''
+                      } ${
+                        dragOverIndex === index ? 'ring-2 ring-primary' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                          </svg>
+                          <label className="block text-sm text-gray-600">
+                            {metric.name}
+                            <span className="text-gray-400 text-xs ml-1">({metric.unit})</span>
+                          </label>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMetric(metric.key)}
+                          className="text-xs text-red-500 hover:text-red-700"
+                          title="Remove metric"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
                       <input
                         type="number"
                         step="any"
@@ -574,23 +976,88 @@ const DataEntry = () => {
                   Cancel
                 </button>
                 <button
-                  type="button"
-                  onClick={(e) => handleSaveFinancials(e, true)}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors disabled:opacity-50"
-                >
-                  Save & Add Another
-                </button>
-                <button
                   type="submit"
                   disabled={loading}
                   className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
-                  Save
+                  {existingFinancials ? 'Update' : 'Save'}
                 </button>
               </div>
             </form>
           )}
+        </div>
+      )}
+
+      {/* Manage Companies Tab */}
+      {activeTab === 'manage' && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">All Companies ({allCompanies.length})</h2>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-slate-50">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Last Price</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {allCompanies.map(comp => (
+                  <tr key={comp.symbol} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm font-medium text-slate-800">{comp.symbol}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[200px]">{comp.name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {comp.category || <span className="text-gray-400">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right tabular-nums">
+                      {formatToThreeDecimals(comp.lastTradedPrice)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => {
+                          handleCompanySelect(comp);
+                          setActiveTab('company');
+                        }}
+                        className="text-primary hover:underline text-sm"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Delete Company?</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete <strong>{company?.symbol}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCompany}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-negative rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

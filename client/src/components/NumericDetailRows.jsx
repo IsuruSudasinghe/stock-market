@@ -1,4 +1,4 @@
-import { formatNumber, formatPercentChange, formatPercent } from '../utils/formatters';
+import { formatNumber, formatPercentChange, formatPercent, formatToThreeDecimals } from '../utils/formatters';
 
 const NumericDetailRows = ({ 
   data, 
@@ -47,7 +47,7 @@ const NumericDetailRows = ({
   const formatValue = (key, value) => {
     if (value === null || value === undefined) return '—';
     if (isPercentageMetric(key)) return formatPercent(value);
-    if (isRatioMetric(key)) return value.toFixed(3);
+    if (isRatioMetric(key)) return formatToThreeDecimals(value);
     return formatNumber(value);
   };
 

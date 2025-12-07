@@ -8,7 +8,7 @@ router.get('/', async (req, res, next) => {
     const { section } = req.query;
     const query = section ? { section } : {};
     
-    const metrics = await MetricDefinition.find(query).sort({ section: 1, name: 1 });
+    const metrics = await MetricDefinition.find(query).sort({ section: 1, order: 1, name: 1 });
     res.json(metrics);
   } catch (err) {
     next(err);
@@ -44,12 +44,19 @@ router.post('/', async (req, res, next) => {
       return res.status(409).json({ error: 'Metric with this key already exists' });
     }
     
+    // Get the highest order for this section and add 1 (add to end)
+    const maxOrderMetric = await MetricDefinition.findOne({ section })
+      .sort({ order: -1 })
+      .limit(1);
+    const newOrder = maxOrderMetric?.order !== undefined ? maxOrderMetric.order + 1 : 0;
+    
     const metric = await MetricDefinition.create({
       name,
       key,
       section,
       unit: unit || 'LKR',
-      isDefault: isDefault || false
+      isDefault: isDefault || false,
+      order: newOrder
     });
     
     res.status(201).json(metric);
@@ -58,14 +65,44 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+// PUT /api/metrics/reorder - Bulk update metric orders (MUST be before /:key routes)
+router.put('/reorder', async (req, res, next) => {
+  try {
+    const { metrics } = req.body; // Array of { key, order }
+    
+    if (!Array.isArray(metrics)) {
+      return res.status(400).json({ error: 'metrics must be an array' });
+    }
+    
+    const updatePromises = metrics.map(({ key, order }) =>
+      MetricDefinition.findOneAndUpdate(
+        { key },
+        { order },
+        { new: true }
+      )
+    );
+    
+    await Promise.all(updatePromises);
+    
+    res.json({ message: 'Metrics reordered successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PUT /api/metrics/:key - Update metric definition
 router.put('/:key', async (req, res, next) => {
   try {
-    const { name, section, unit, isDefault } = req.body;
+    const { name, section, unit, isDefault, order } = req.body;
+    
+    const updateData = { name, section, unit, isDefault };
+    if (order !== undefined) {
+      updateData.order = order;
+    }
     
     const metric = await MetricDefinition.findOneAndUpdate(
       { key: req.params.key },
-      { name, section, unit, isDefault },
+      updateData,
       { new: true, runValidators: true }
     );
     

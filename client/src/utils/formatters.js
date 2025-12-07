@@ -1,4 +1,24 @@
 /**
+ * Remove trailing zeros from a number string
+ * @param {string} numStr - Number string with decimals
+ * @returns {string} Number string without trailing zeros
+ */
+export const removeTrailingZeros = (numStr) => {
+  // Remove trailing zeros and trailing decimal point if all decimals are zeros
+  return numStr.replace(/\.?0+$/, '');
+};
+
+/**
+ * Format a number to 3 decimal places, removing trailing zeros
+ * @param {number} num - The number to format
+ * @returns {string} Formatted number string
+ */
+export const formatToThreeDecimals = (num) => {
+  if (num === null || num === undefined) return '—';
+  return removeTrailingZeros(num.toFixed(3));
+};
+
+/**
  * Format a number with abbreviations (K, M, B, T) in LKR
  * @param {number} num - The number to format
  * @param {number} decimals - Number of decimal places (default 3)
@@ -12,19 +32,19 @@ export const formatNumber = (num, decimals = 3) => {
   const sign = num < 0 ? '-' : '';
   
   if (absNum >= 1e12) {
-    return sign + (absNum / 1e12).toFixed(decimals) + 'T';
+    return sign + removeTrailingZeros((absNum / 1e12).toFixed(decimals)) + 'T';
   }
   if (absNum >= 1e9) {
-    return sign + (absNum / 1e9).toFixed(decimals) + 'B';
+    return sign + removeTrailingZeros((absNum / 1e9).toFixed(decimals)) + 'B';
   }
   if (absNum >= 1e6) {
-    return sign + (absNum / 1e6).toFixed(decimals) + 'M';
+    return sign + removeTrailingZeros((absNum / 1e6).toFixed(decimals)) + 'M';
   }
   if (absNum >= 1e3) {
-    return sign + (absNum / 1e3).toFixed(decimals) + 'K';
+    return sign + removeTrailingZeros((absNum / 1e3).toFixed(decimals)) + 'K';
   }
   
-  return sign + absNum.toFixed(decimals);
+  return sign + removeTrailingZeros(absNum.toFixed(decimals));
 };
 
 /**
@@ -66,7 +86,7 @@ export const formatPercentChange = (change) => {
     return { value: '—', colorClass: 'text-neutral', arrow: '', hasValue: false };
   }
   
-  const percentage = (change * 100).toFixed(3);
+  const percentage = removeTrailingZeros((change * 100).toFixed(3));
   
   if (change > 0) {
     return {
@@ -84,7 +104,7 @@ export const formatPercentChange = (change) => {
     };
   }
   
-  return { value: '0.000%', colorClass: 'text-neutral', arrow: '', hasValue: true };
+  return { value: '0%', colorClass: 'text-neutral', arrow: '', hasValue: true };
 };
 
 /**
@@ -94,7 +114,7 @@ export const formatPercentChange = (change) => {
  */
 export const formatPercent = (value) => {
   if (value === null || value === undefined || !isFinite(value)) return '—';
-  return `${value.toFixed(3)}%`;
+  return `${removeTrailingZeros(value.toFixed(3))}%`;
 };
 
 /**
@@ -105,10 +125,10 @@ export const formatPercent = (value) => {
  * @returns {object} Formatted price data
  */
 export const formatPriceChange = (price, change, changePercent) => {
-  const priceStr = price?.toFixed(3) ?? '—';
-  const changeStr = change?.toFixed(3) ?? '—';
+  const priceStr = price !== null && price !== undefined ? removeTrailingZeros(price.toFixed(3)) : '—';
+  const changeStr = change !== null && change !== undefined ? removeTrailingZeros(change.toFixed(3)) : '—';
   const percentStr = (changePercent !== null && changePercent !== undefined && isFinite(changePercent)) 
-    ? changePercent.toFixed(3) 
+    ? removeTrailingZeros(changePercent.toFixed(3))
     : null;
   
   let colorClass = 'text-neutral';

@@ -71,16 +71,26 @@ const CompareTable = ({
   selectedForChart,
   onToggleChartSelection
 }) => {
-  // Get all unique periods and sort them by date (latest first by default)
+  // Get all unique periods and sort them by date (oldest to newest, left to right)
   const periods = useMemo(() => {
     const allPeriods = new Set();
     Object.values(financialsMap).forEach(data => {
-      data?.items?.forEach(item => allPeriods.add(item.periodISO));
+      if (data?.items) {
+        data.items.forEach(item => {
+          // Filter by periodType - only include matching periods
+          const isQuarterly = item.periodISO && item.periodISO.includes('-Q');
+          if (periodType === 'quarterly' && isQuarterly) {
+            allPeriods.add(item.periodISO);
+          } else if (periodType === 'annual' && !isQuarterly) {
+            allPeriods.add(item.periodISO);
+          }
+        });
+      }
     });
     
     const periodsArray = Array.from(allPeriods);
     
-    // Sort by date (oldest first, then reverse to show latest on right)
+    // Sort by date (oldest first, newest last - left to right)
     periodsArray.sort((a, b) => {
       const aParsed = parsePeriod(a);
       const bParsed = parsePeriod(b);
@@ -90,21 +100,17 @@ const CompareTable = ({
         return aParsed.year - bParsed.year; // Oldest first
       }
       
-      // If same year, compare quarters
+      // If same year and both quarterly, compare quarters
       if (aParsed.isQuarterly && bParsed.isQuarterly) {
         return aParsed.quarter - bParsed.quarter; // Q1 before Q2, etc.
       }
       
-      // Annual periods come before quarterly for same year
-      if (!aParsed.isQuarterly && bParsed.isQuarterly) return -1;
-      if (aParsed.isQuarterly && !bParsed.isQuarterly) return 1;
-      
       return 0;
     });
     
-    // Reverse to show latest on right, oldest on left
-    return periodsArray.slice(-10).reverse(); // Show up to 10 periods, latest on right
-  }, [financialsMap]);
+    // Return oldest to newest (left to right) - show up to 10 periods
+    return periodsArray.slice(-10);
+  }, [financialsMap, periodType]);
 
   // Sort state: { period: 'asc' | 'desc' | null } - tracks which column is sorted and direction
   // Default to latest period, descending
@@ -179,26 +185,29 @@ const CompareTable = ({
     selectedForChart.forEach(symbol => {
       financialsMap[symbol]?.items?.forEach(item => allPeriods.add(item.periodISO));
     });
-    // Sort periods by date (latest first)
-    const periodsArray = Array.from(allPeriods);
+    // Filter periods by periodType and sort by date (oldest first, newest last)
+    const periodsArray = Array.from(allPeriods).filter(period => {
+      const isQuarterly = period.includes('-Q');
+      if (periodType === 'quarterly') return isQuarterly;
+      if (periodType === 'annual') return !isQuarterly;
+      return true;
+    });
+    
     periodsArray.sort((a, b) => {
       const aParsed = parsePeriod(a);
       const bParsed = parsePeriod(b);
       
       if (aParsed.year !== bParsed.year) {
-        return bParsed.year - aParsed.year;
+        return aParsed.year - bParsed.year; // Oldest first
       }
       
       if (aParsed.isQuarterly && bParsed.isQuarterly) {
-        return bParsed.quarter - aParsed.quarter;
+        return aParsed.quarter - bParsed.quarter; // Q1 before Q2
       }
-      
-      if (!aParsed.isQuarterly && bParsed.isQuarterly) return -1;
-      if (aParsed.isQuarterly && !bParsed.isQuarterly) return 1;
       
       return 0;
     });
-    const sortedPeriods = periodsArray.slice(0, 5);
+    const sortedPeriods = periodsArray.slice(-5); // Get last 5 (newest)
 
     return sortedPeriods.map(period => {
       const point = { period: period.includes('-Q') ? period.replace('-Q', ' Q') : period };
@@ -444,6 +453,20 @@ const ComparePage = () => {
     loadCategories();
   }, []);
 
+  // Validate selectedCategory when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && selectedCategory && !categories.includes(selectedCategory)) {
+      // Category doesn't exist, clear it
+      setSelectedCategory('');
+      setSearchParams({});
+      updateCompareState({ 
+        selectedCategory: '', 
+        selectedForChart: { income: [], balance: [], cashflow: [] } 
+      });
+      setSelectedForChart({ income: [], balance: [], cashflow: [] });
+    }
+  }, [categories, selectedCategory]);
+
   // Load companies by category
   useEffect(() => {
     const loadCompanies = async () => {
@@ -451,17 +474,16 @@ const ComparePage = () => {
         try {
           const allCompanies = await getCompanies();
           setCompanies(allCompanies.slice(0, 20));
-          // Auto-select top 10 for each section if not already selected
-          setSelectedForChart(prev => {
-            const top10 = allCompanies.slice(0, 10).map(c => c.symbol);
-            return {
-              income: prev.income.length > 0 ? prev.income : top10,
-              balance: prev.balance.length > 0 ? prev.balance : top10,
-              cashflow: prev.cashflow.length > 0 ? prev.cashflow : top10
-            };
+          // Reset chart selections when switching to "All Companies"
+          const top10 = allCompanies.slice(0, 10).map(c => c.symbol);
+          setSelectedForChart({
+            income: top10,
+            balance: top10,
+            cashflow: top10
           });
         } catch (error) {
           console.error('Error loading companies:', error);
+          setCompanies([]);
         }
         return;
       }
@@ -470,18 +492,36 @@ const ComparePage = () => {
       try {
         const categoryCompanies = await getCompaniesByCategory(selectedCategory);
         setCompanies(categoryCompanies);
-        // Auto-select top 10 for each section if not already selected
-        setSelectedForChart(prev => {
-          const top10 = categoryCompanies.slice(0, 10).map(c => c.symbol);
-          return {
-            income: prev.income.length > 0 ? prev.income : top10,
-            balance: prev.balance.length > 0 ? prev.balance : top10,
-            cashflow: prev.cashflow.length > 0 ? prev.cashflow : top10
-          };
+        
+        // Reset chart selections when switching categories - use top 10 from new category
+        const top10 = categoryCompanies.slice(0, 10).map(c => c.symbol);
+        setSelectedForChart({
+          income: top10,
+          balance: top10,
+          cashflow: top10
         });
       } catch (error) {
-        toast.error('Error loading companies');
-        console.error('Error:', error);
+        // If category doesn't exist or has no companies, show all companies
+        console.error('Error loading category companies:', error);
+        try {
+          const allCompanies = await getCompanies();
+          setCompanies(allCompanies.slice(0, 20));
+          setSelectedCategory('');
+          setSearchParams({});
+          updateCompareState({ 
+            selectedCategory: '',
+            selectedForChart: { income: [], balance: [], cashflow: [] }
+          });
+          const top10 = allCompanies.slice(0, 10).map(c => c.symbol);
+          setSelectedForChart({
+            income: top10,
+            balance: top10,
+            cashflow: top10
+          });
+        } catch (fallbackError) {
+          console.error('Error loading all companies:', fallbackError);
+          setCompanies([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -524,6 +564,8 @@ const ComparePage = () => {
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
     setSearchParams(category ? { category } : {});
+    // Reset chart selections when category changes
+    setSelectedForChart({ income: [], balance: [], cashflow: [] });
   };
 
   // Handle metric change for a section
@@ -616,7 +658,7 @@ const ComparePage = () => {
           </svg>
           <h3 className="text-lg font-medium text-gray-700 mb-2">No Companies Found</h3>
           <p className="text-gray-500">
-            {selectedCategory 
+            {selectedCategory && categories.includes(selectedCategory)
               ? `No companies in category "${selectedCategory}". Add companies with this category first.`
               : 'Add some companies to start comparing.'}
           </p>
