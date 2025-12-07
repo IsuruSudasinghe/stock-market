@@ -122,19 +122,19 @@ const FinancialSection = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6" ref={sectionRef}>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-4 sm:mb-6" ref={sectionRef}>
       {/* Section Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 min-w-0">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800 truncate">
             {SECTION_TITLES[section]}
           </h2>
           
           {/* Period Type Toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 flex-shrink-0">
             <button
               onClick={() => onPeriodTypeChange('quarterly')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-md transition-all ${
                 periodType === 'quarterly'
                   ? 'bg-white text-primary shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -144,7 +144,7 @@ const FinancialSection = ({
             </button>
             <button
               onClick={() => onPeriodTypeChange('annual')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-md transition-all ${
                 periodType === 'annual'
                   ? 'bg-white text-primary shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -155,12 +155,13 @@ const FinancialSection = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Export buttons */}
           <button
             onClick={handleExportChart}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 transition-colors"
             title="Export as PNG"
+            aria-label="Export chart as PNG"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -168,8 +169,9 @@ const FinancialSection = ({
           </button>
           <button
             onClick={handleExportCSV}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 transition-colors"
             title="Export as CSV"
+            aria-label="Export data as CSV"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -179,7 +181,8 @@ const FinancialSection = ({
           {/* Expand/Collapse */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
           >
             <svg 
               className={`w-4 h-4 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -195,10 +198,10 @@ const FinancialSection = ({
 
       {/* Section Content */}
       {isExpanded && (
-        <div className="p-6">
+        <div className="p-3 sm:p-4 lg:p-6">
           {loading ? (
             <div className="animate-pulse">
-              <div className="h-64 bg-gray-100 rounded mb-4"></div>
+              <div className="h-48 sm:h-64 bg-gray-100 rounded mb-4"></div>
               <div className="space-y-2">
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} className="h-8 bg-gray-100 rounded"></div>
@@ -224,17 +227,17 @@ const FinancialSection = ({
               />
 
               {/* Legend */}
-              <div className="flex items-center gap-4 mt-4 mb-2">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-3 sm:mt-4 mb-2">
                 {selectedMetrics.map((metricKey, index) => {
                   const metric = ALL_METRICS[section].find(m => m.key === metricKey);
                   const colors = ['#3b82f6', '#eab308', '#10b981', '#f97316'];
                   return (
-                    <div key={metricKey} className="flex items-center gap-2">
+                    <div key={metricKey} className="flex items-center gap-1.5 sm:gap-2">
                       <div 
-                        className="w-3 h-3 rounded-full" 
+                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" 
                         style={{ backgroundColor: colors[index % colors.length] }}
                       />
-                      <span className="text-xs text-gray-600">{metric?.name || metricKey}</span>
+                      <span className="text-xs text-gray-600 truncate max-w-[120px] sm:max-w-none">{metric?.name || metricKey}</span>
                     </div>
                   );
                 })}

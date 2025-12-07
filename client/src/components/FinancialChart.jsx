@@ -26,18 +26,18 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
 
   return (
-    <div className="bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg text-sm">
-      <div className="font-medium mb-2">{label}</div>
+    <div className="bg-slate-800 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-lg text-xs sm:text-sm max-w-[200px] sm:max-w-none">
+      <div className="font-medium mb-1 sm:mb-2 text-xs sm:text-sm">{label}</div>
       {payload.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2 mb-1">
+        <div key={index} className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
           <div
-            className="w-3 h-3 rounded-full"
+            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-gray-300">{entry.name}:</span>
-          <span className="font-medium">{formatNumber(entry.value)}</span>
+          <span className="text-gray-300 text-xs truncate">{entry.name}:</span>
+          <span className="font-medium text-xs sm:text-sm">{formatNumber(entry.value)}</span>
           {entry.payload[`${entry.dataKey}_yoy`] !== undefined && (
-            <span className={`text-xs ${
+            <span className={`text-xs flex-shrink-0 ${
               entry.payload[`${entry.dataKey}_yoy`] > 0 
                 ? 'text-green-400' 
                 : entry.payload[`${entry.dataKey}_yoy`] < 0 
@@ -176,31 +176,37 @@ const FinancialChart = ({
   const dynamicBarSize = barsPerGroup <= 2 ? standardBarSize : Math.max(20, standardBarSize - (barsPerGroup - 2) * 5);
   
   return (
-    <div style={{ height }}>
+    <div style={{ height }} className="w-full min-h-[280px] sm:min-h-[320px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          barCategoryGap="25%"
+          margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
+          barCategoryGap="20%"
           barSize={dynamicBarSize}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
             dataKey="label"
-            tick={{ fill: '#64748b', fontSize: 12 }}
+            tick={{ fill: '#64748b', fontSize: 10 }}
             axisLine={{ stroke: '#e2e8f0' }}
             tickLine={false}
+            angle={-45}
+            textAnchor="end"
+            height={60}
           />
           <YAxis
-            tick={{ fill: '#64748b', fontSize: 12 }}
+            tick={{ fill: '#64748b', fontSize: 10 }}
             axisLine={{ stroke: '#e2e8f0' }}
             tickLine={false}
             tickFormatter={(value) => formatNumber(value, 0)}
+            width={60}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
             wrapperStyle={{ paddingTop: 10 }}
             iconType="circle"
+            iconSize={8}
+            fontSize={11}
           />
           {bars}
         </BarChart>

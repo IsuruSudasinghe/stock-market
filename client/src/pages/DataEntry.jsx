@@ -639,15 +639,15 @@ const DataEntry = () => {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Data Entry</h1>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Data Entry</h1>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 mb-4 sm:mb-6 bg-slate-100 p-1 rounded-lg w-full sm:w-fit overflow-x-auto">
         <button
           onClick={() => setActiveTab('company')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap ${
             activeTab === 'company'
               ? 'bg-white text-primary shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
@@ -657,7 +657,7 @@ const DataEntry = () => {
         </button>
         <button
           onClick={() => setActiveTab('financials')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap ${
             activeTab === 'financials'
               ? 'bg-white text-primary shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
@@ -667,7 +667,7 @@ const DataEntry = () => {
         </button>
         <button
           onClick={() => setActiveTab('manage')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap ${
             activeTab === 'manage'
               ? 'bg-white text-primary shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
@@ -679,7 +679,7 @@ const DataEntry = () => {
 
       {/* Company Tab */}
       {activeTab === 'company' && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-800 mb-4">Company Information</h2>
           
           {/* Search existing */}
@@ -700,7 +700,7 @@ const DataEntry = () => {
             </h3>
             
             <form onSubmit={handleSaveCompany} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Symbol *
@@ -759,22 +759,23 @@ const DataEntry = () => {
                 <p className="text-xs text-gray-500 mt-1">Used for grouping companies in comparison view</p>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                 <button
                   type="button"
                   onClick={handleFetchFromCSE}
                   disabled={loading || !companyForm.symbol}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  Fetch from CSE
+                  <span className="hidden sm:inline">Fetch from CSE</span>
+                  <span className="sm:hidden">Fetch</span>
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                   {company ? 'Update Company' : 'Create Company'}
                 </button>
@@ -782,7 +783,7 @@ const DataEntry = () => {
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="px-4 py-2 text-sm font-medium text-negative bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-negative bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                   >
                     Delete
                   </button>
@@ -795,8 +796,8 @@ const DataEntry = () => {
           {company && (
             <div className="mt-6 pt-6 border-t border-gray-100">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Current Company Data</h3>
-              <div className="bg-slate-50 rounded-lg p-4 text-sm">
-                <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-50 rounded-lg p-3 sm:p-4 text-xs sm:text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div><span className="text-gray-500">Symbol:</span> {company.symbol}</div>
                   <div><span className="text-gray-500">Name:</span> {company.name}</div>
                   <div><span className="text-gray-500">ISIN:</span> {company.isin || '—'}</div>
@@ -812,7 +813,7 @@ const DataEntry = () => {
 
       {/* Financials Tab */}
       {activeTab === 'financials' && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-800 mb-4">Financial Data Entry</h2>
           
           {!selectedSymbol ? (
@@ -835,7 +836,7 @@ const DataEntry = () => {
               )}
 
               {/* Period Selection */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Period Type
@@ -886,13 +887,13 @@ const DataEntry = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Section
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {SECTIONS.map(section => (
                     <button
                       key={section.id}
                       type="button"
                       onClick={() => setFinancialForm(prev => ({ ...prev, section: section.id }))}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all flex-1 sm:flex-initial ${
                         financialForm.section === section.id
                           ? 'bg-primary text-white'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -917,7 +918,7 @@ const DataEntry = () => {
                   </button>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {sectionMetrics.map((metric, index) => (
                     <div
                       key={metric.key}
@@ -990,38 +991,38 @@ const DataEntry = () => {
 
       {/* Manage Companies Tab */}
       {activeTab === 'manage' && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">All Companies ({allCompanies.length})</h2>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">All Companies ({allCompanies.length})</h2>
           
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="bg-slate-50">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Last Price</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Last Price</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {allCompanies.map(comp => (
                   <tr key={comp.symbol} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-sm font-medium text-slate-800">{comp.symbol}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[200px]">{comp.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-slate-800">{comp.symbol}</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 truncate max-w-[150px] sm:max-w-[200px]">{comp.name}</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">
                       {comp.category || <span className="text-gray-400">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right tabular-nums">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-right tabular-nums">
                       {formatToThreeDecimals(comp.lastTradedPrice)}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-center">
                       <button
                         onClick={() => {
                           handleCompanySelect(comp);
                           setActiveTab('company');
                         }}
-                        className="text-primary hover:underline text-sm"
+                        className="text-primary hover:underline text-xs sm:text-sm"
                       >
                         Edit
                       </button>
@@ -1036,23 +1037,23 @@ const DataEntry = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">Delete Company?</h3>
-            <p className="text-gray-600 mb-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-2">Delete Company?</h3>
+            <p className="text-sm sm:text-base text-gray-600 mb-4">
               Are you sure you want to delete <strong>{company?.symbol}</strong>? This action cannot be undone.
             </p>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteCompany}
                 disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-negative rounded-lg hover:bg-red-700 disabled:opacity-50"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-negative rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
                 Delete
               </button>
@@ -1063,8 +1064,8 @@ const DataEntry = () => {
 
       {/* Custom Metric Modal */}
       {showCustomMetric && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-slate-800 mb-4">Add Custom Metric</h3>
             <form onSubmit={handleCreateCustomMetric} className="space-y-4">
               <div>
@@ -1094,7 +1095,7 @@ const DataEntry = () => {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Section
@@ -1125,17 +1126,17 @@ const DataEntry = () => {
                   </select>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowCustomMetric(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Create Metric
                 </button>

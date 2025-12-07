@@ -52,16 +52,17 @@ const NumericDetailRows = ({
   };
 
   return (
-    <div className="mt-4 px-8">
+    <div className="mt-3 sm:mt-4 px-2 sm:px-4 lg:px-8">
       {/* Header */}
-      <div className="flex items-center justify-between text-xs text-gray-500 uppercase tracking-wide mb-3 pb-2 border-b border-gray-100 px-4">
-        <span>(LKR)</span>
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1">
-            {periodLabel || selectedPeriod || 'Latest'} 
+      <div className="flex items-center justify-between text-xs text-gray-500 uppercase tracking-wide mb-2 sm:mb-3 pb-2 border-b border-gray-100 px-2 sm:px-4">
+        <span className="text-xs">(LKR)</span>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <span className="flex items-center gap-1 text-xs">
+            <span className="hidden sm:inline">{periodLabel || selectedPeriod || 'Latest'}</span>
+            <span className="sm:hidden truncate max-w-[80px]">{periodLabel || selectedPeriod || 'Latest'}</span>
             <span className="text-gray-400">ⓘ</span>
           </span>
-          <span className="w-28 text-right">Y/Y Change</span>
+          <span className="w-20 sm:w-28 text-right text-xs">Y/Y Change</span>
         </div>
       </div>
 
@@ -75,21 +76,21 @@ const NumericDetailRows = ({
           return (
             <div
               key={metricKey}
-              className="flex items-center justify-between py-2 px-4 hover:bg-slate-50 rounded transition-colors"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 py-2 px-2 sm:px-4 hover:bg-slate-50 rounded transition-colors"
             >
-              <span className="text-sm text-gray-700 flex-1">{getDisplayName(metricKey)}</span>
-              <div className="flex items-center gap-4">
+              <span className="text-xs sm:text-sm text-gray-700 flex-1 truncate">{getDisplayName(metricKey)}</span>
+              <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4 min-w-0">
                 <span 
-                  className="text-sm font-medium text-slate-800 tabular-nums min-w-[100px] text-right"
+                  className="text-xs sm:text-sm font-medium text-slate-800 tabular-nums min-w-[80px] sm:min-w-[100px] text-right truncate"
                   title={value?.toLocaleString()}
                 >
                   {formatValue(metricKey, value)}
                 </span>
-                <span className={`w-28 text-right text-sm font-medium tabular-nums ${change.colorClass}`}>
+                <span className={`w-20 sm:w-28 text-right text-xs sm:text-sm font-medium tabular-nums flex-shrink-0 ${change.colorClass}`}>
                   {change.hasValue ? (
                     <>
-                      {change.arrow && <span className="mr-1">{change.arrow}</span>}
-                      {change.value}
+                      {change.arrow && <span className="mr-0.5 sm:mr-1">{change.arrow}</span>}
+                      <span className="truncate">{change.value}</span>
                     </>
                   ) : (
                     '—'

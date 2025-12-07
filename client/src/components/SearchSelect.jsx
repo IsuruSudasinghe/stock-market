@@ -112,7 +112,7 @@ const SearchSelect = ({ onSelect, placeholder = 'Search...', value = '' }) => {
       {isOpen && results.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto max-w-[calc(100vw-2rem)] sm:max-w-none"
         >
           {results.map((company, index) => (
             <button

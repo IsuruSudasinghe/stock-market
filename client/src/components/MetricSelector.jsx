@@ -27,15 +27,15 @@ const MetricSelector = ({
   const visibleMetrics = isExpanded ? metrics : metrics.slice(0, 6);
 
   return (
-    <div className="mb-4">
-      <div className="flex flex-wrap gap-2">
+    <div className="mb-3 sm:mb-4">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {visibleMetrics.map((metric) => {
           const isSelected = selectedMetrics.includes(metric.key);
           return (
             <button
               key={metric.key}
               onClick={() => handleToggle(metric.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium rounded-full transition-all whitespace-nowrap ${
                 isSelected
                   ? 'bg-primary text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -49,7 +49,7 @@ const MetricSelector = ({
         {metrics.length > 6 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="px-3 py-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+            className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
           >
             {isExpanded ? 'Show less' : `+${metrics.length - 6} more`}
           </button>

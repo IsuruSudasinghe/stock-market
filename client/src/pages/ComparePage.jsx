@@ -220,18 +220,18 @@ const CompareTable = ({
   }, [selectedForChart, financialsMap, selectedMetric]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6">
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-4 sm:mb-6">
+      <div className="p-3 sm:p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800 truncate">{title}</h2>
         </div>
         {/* Metric Selector */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {metrics.map(metric => (
             <button
               key={metric.key}
               onClick={() => onMetricChange(metric.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium rounded-full transition-all whitespace-nowrap ${
                 selectedMetric === metric.key
                   ? 'bg-primary text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -244,14 +244,14 @@ const CompareTable = ({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto -mx-3 sm:mx-0">
+        <table className="w-full min-w-[600px]">
           <thead>
             <tr className="bg-slate-50">
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-12">
+              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-10 sm:w-12">
                 Chart
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[120px]">
                 Company
               </th>
               {periods.map(period => {
@@ -259,7 +259,7 @@ const CompareTable = ({
                 return (
                   <th 
                     key={period} 
-                    className={`px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide cursor-pointer select-none min-w-[100px] ${
+                    className={`px-2 sm:px-4 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide cursor-pointer select-none min-w-[80px] sm:min-w-[100px] ${
                       isSorted 
                         ? 'bg-gray-200 hover:bg-gray-300' 
                         : 'hover:bg-slate-100'
@@ -268,10 +268,10 @@ const CompareTable = ({
                     title="Click to sort by this column"
                   >
                     <div className="flex items-center justify-end gap-1">
-                      {period.includes('-Q') ? period.replace('-Q', ' Q') : period}
+                      <span className="text-xs">{period.includes('-Q') ? period.replace('-Q', ' Q') : period}</span>
                       {isSorted && (
                         <svg 
-                          className={`w-3 h-3 transition-transform ${columnSort.direction === 'desc' ? '' : 'rotate-180'}`}
+                          className={`w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform ${columnSort.direction === 'desc' ? '' : 'rotate-180'}`}
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
@@ -294,24 +294,24 @@ const CompareTable = ({
               
               return (
                 <tr key={company.symbol} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
+                  <td className="px-2 sm:px-4 py-2 sm:py-3">
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => onToggleChartSelection(company.symbol)}
                       disabled={!isSelected && selectedForChart.length >= 10}
-                      className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary rounded border-gray-300 focus:ring-primary"
                     />
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                  <td className="px-2 sm:px-4 py-2 sm:py-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <div 
-                        className="w-3 h-3 rounded-full" 
+                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" 
                         style={{ backgroundColor: COLORS[originalIdx >= 0 ? originalIdx % COLORS.length : idx % COLORS.length] }}
                       />
-                      <div>
-                        <div className="text-sm font-medium text-slate-800">{company.symbol}</div>
-                        <div className="text-xs text-gray-500 truncate max-w-[150px]">{company.name}</div>
+                      <div className="min-w-0">
+                        <div className="text-xs sm:text-sm font-medium text-slate-800 truncate">{company.symbol}</div>
+                        <div className="text-xs text-gray-500 truncate max-w-[100px] sm:max-w-[150px]">{company.name}</div>
                       </div>
                     </div>
                   </td>
@@ -320,7 +320,7 @@ const CompareTable = ({
                     const value = periodData?.data?.[selectedMetric];
                     
                     return (
-                      <td key={period} className="px-4 py-3 text-right text-sm tabular-nums min-w-[100px]">
+                      <td key={period} className="px-2 sm:px-4 py-2 sm:py-3 text-right text-xs sm:text-sm tabular-nums min-w-[80px] sm:min-w-[100px]">
                         {value !== null && value !== undefined 
                           ? (isPercentMetric ? formatPercent(value) : formatNumber(value))
                           : '—'
@@ -336,30 +336,34 @@ const CompareTable = ({
       </div>
 
       {/* Trend Chart for this section */}
-      <div className="p-6 border-t border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-slate-800">
+      <div className="p-3 sm:p-4 lg:p-6 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
+          <h3 className="text-sm sm:text-base font-semibold text-slate-800 truncate">
             Trend Comparison - {metrics.find(m => m.key === selectedMetric)?.name || selectedMetric}
           </h3>
-          <span className="text-sm text-gray-500">
+          <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
             {selectedForChart.length} companies selected (max 10)
           </span>
         </div>
 
         {chartData.length > 0 && selectedForChart.length > 0 ? (
-          <div style={{ height: 400 }}>
+          <div style={{ height: 300 }} className="sm:h-[350px] lg:h-[400px] min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis 
                   dataKey="period" 
-                  tick={{ fill: '#64748b', fontSize: 12 }}
+                  tick={{ fill: '#64748b', fontSize: 10 }}
                   axisLine={{ stroke: '#e2e8f0' }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
                 <YAxis 
-                  tick={{ fill: '#64748b', fontSize: 12 }}
+                  tick={{ fill: '#64748b', fontSize: 10 }}
                   axisLine={{ stroke: '#e2e8f0' }}
                   tickFormatter={(v) => formatNumber(v, 0)}
+                  width={60}
                 />
                 <Tooltip 
                   contentStyle={{ 
@@ -591,23 +595,23 @@ const ComparePage = () => {
   return (
     <div>
       {/* Header Controls */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">Compare Companies</h1>
-            <p className="text-sm text-gray-500 mt-1">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-slate-800">Compare Companies</h1>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
               {selectedCategory ? `Showing companies in "${selectedCategory}"` : 'Showing all companies'}
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             {/* Category Selector */}
-            <div>
+            <div className="flex-1 sm:flex-initial">
               <label className="block text-xs text-gray-500 mb-1">Category</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">All Companies</option>
                 {categories.map(cat => (
@@ -617,12 +621,12 @@ const ComparePage = () => {
             </div>
 
             {/* Period Type Toggle */}
-            <div>
+            <div className="flex-shrink-0">
               <label className="block text-xs text-gray-500 mb-1">Period</label>
               <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
                 <button
                   onClick={() => setPeriodType('quarterly')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
                     periodType === 'quarterly'
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'
@@ -632,7 +636,7 @@ const ComparePage = () => {
                 </button>
                 <button
                   onClick={() => setPeriodType('annual')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
                     periodType === 'annual'
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'
